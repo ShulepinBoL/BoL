@@ -9,7 +9,6 @@ local function Alert(text, name)
     print("<b><font color=\"#ffb10a\">"..name.."- <font color=\"#ffffff\"><b>"..text) 
 end
 
---[[
 local AUTOUPDATE = true
 local UPDATE_HOST = "raw.githubusercontent.com"
 local UPDATE_PATH = "/ShulepinBoL/BoL/master/ShulepinLucian.lua".."?rand="..math.random(1,10000)
@@ -33,7 +32,7 @@ if AUTOUPDATE then
 	else
 		Alert("Error downloading version info")
 	end
-end]]
+end
 
 if not _G.UPLloaded then
         if FileExist(LIB_PATH .. "/UPL.lua") then
