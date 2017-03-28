@@ -1,5 +1,5 @@
 if myHero.charName ~= "Lucian" then return end
- 
+
 local ScriptVersion = "0.1"
 local LeagueVersion = "7.6"
 local ScriptAuthor = "Shulepin"
@@ -11,19 +11,19 @@ end
 
 local AUTOUPDATE = true
 local UPDATE_HOST = "raw.githubusercontent.com"
-local UPDATE_PATH = "/ShulepinBoL/BoL/master/ShulepinLucian.lua".."?rand="..math.random(1,10000)
+local UPDATE_PATH = "/ShulepinBoL/BoL/master/Lucian/ShulepinLucian.lua".."?rand="..math.random(1,10000)
 local UPDATE_FILE_PATH = SCRIPT_PATH..GetCurrentEnv().FILE_NAME
 local UPDATE_URL = "https://"..UPDATE_HOST..UPDATE_PATH
 
 if AUTOUPDATE then
-	local ServerData = GetWebResult(UPDATE_HOST,"/ShulepinBoL/BoL/master/ShulepinLucian.version")
+	local ServerData = GetWebResult(UPDATE_HOST,"/ShulepinBoL/BoL/master/Lucian/ShulepinLucian.version")
 	if ServerData then
 		ServerVersion = type(tonumber(ServerData)) == "number" and tonumber(ServerData) or nil
 		if ServerVersion then
-			if tonumber(version) < ServerVersion then
+			if tonumber(ScriptVersion) < ServerVersion then
 				Alert("New version available "..ServerVersion)
 				Alert("Updating, please don't press F9")
-				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () Alert("Successfully updated. ("..version.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 2)
+				DelayAction(function() DownloadFile(UPDATE_URL, UPDATE_FILE_PATH, function () Alert("Successfully updated. ("..ScriptVersion.." => "..ServerVersion.."), press F9 twice to load the updated version.") end) end, 2)
 				return
 			else
 				DelayAction(function() Alert("You have got the latest version ("..ServerVersion..")") end, 4)
