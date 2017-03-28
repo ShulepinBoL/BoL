@@ -1,5 +1,5 @@
 if myHero.charName ~= "Lucian" then return end
-
+ 
 local ScriptVersion = "0.1"
 local LeagueVersion = "7.6"
 local ScriptAuthor = "Shulepin"
