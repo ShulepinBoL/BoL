@@ -1,13 +1,13 @@
 if myHero.charName ~= "Lucian" then return end
 
-local ScriptVersion = "0.1"
-local LeagueVersion = "7.6"
-local ScriptAuthor = "Shulepin"
-
 local function Alert(text, name)
     if not name then name = "Shulepin's Lucian " end
     print("<b><font color=\"#ffb10a\">"..name.."- <font color=\"#ffffff\"><b>"..text) 
 end
+
+local ScriptVersion = "0.2"
+local LeagueVersion = "7.6"
+local ScriptAuthor = "Shulepin"
 
 local AUTOUPDATE = true
 local UPDATE_HOST = "raw.githubusercontent.com"
@@ -194,6 +194,9 @@ function Lucian:Menu()
 	self.Config.Skin:addParam("List", myHero.charName .. " Skins", SCRIPT_PARAM_LIST, 1, {"Classic", "Hired Gun Lucian", "Striker Lucian", "Yellow Chroma", "Red Chroma", "Blue Chroma", "PROJECT: Lucian", "Heartseeker Lucian"})
 	self.Config.Skin:setCallback("List", function() self:SkinChanger() end)
 	--
+	self.Config:addSubMenu("[Lucian] Walljumper", "Wall")
+	self.Config.Wall:addParam("Key", "Walljump Key", SCRIPT_PARAM_ONKEYDOWN, false, string.byte("G"))
+	--
 	self.Config:addSubMenu("[Lucian] Target Selector", "TS")
 	self.Config.TS:addTS(self.TS)
 	self.Config:addSubMenu("[Lucian] Orbwalker", "Orb")
@@ -225,6 +228,7 @@ function Lucian:Tick()
 	self:TickHarass()
 	self:TickAutoHarass()
 	self:TickKS()
+	self:Walljumper()
 end
 
 function Lucian:CastSpell(spell)
@@ -261,6 +265,18 @@ function Lucian:Draw()
 	if self.Config.Draw.R.Range and self.R.IsReady() then
 		DrawCircle3D(myHero.x, myHero.y, myHero.z, self.R.range, 2, ARGB(self.Config.Draw.R.Color[1], self.Config.Draw.R.Color[2], self.Config.Draw.R.Color[3], self.Config.Draw.R.Color[4]), 75)
 	end
+
+	if self.Config.Wall.Key then
+		local pos1 = self:VectorExtend(Vector(myHero), Vector(mousePos), self.E.range)
+	        local pos2 = self:VectorExtend(Vector(myHero), Vector(mousePos), myHero.boundingRadius) 
+	        if IsWall(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)) then
+		        DrawCircle3D(pos1.x, pos1.y, pos1.z, 150, 2, ARGB(255, 255, 0, 0), 75)
+		        DrawText("E Pos", 25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).x-25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).y, ARGB(255, 255, 0, 0))
+	        else
+		        DrawCircle3D(pos1.x, pos1.y, pos1.z, 150, 2, ARGB(255, 255, 255, 255), 75)
+		        DrawText("E Pos", 25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).x-25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).y, ARGB(255, 255, 255, 255))
+	        end
+        end
 
 	local target = self.TS.target
 	if target == nil then return end
@@ -366,6 +382,24 @@ function Lucian:TickKS()
 				end
 			end
 		end
+	end
+end
+
+function Lucian:Walljumper()
+	if self.Config.Wall.Key then
+		local p1 = myHero + (Vector(mousePos) - myHero):normalized() * 200
+                local p2 = myHero + (Vector(mousePos) - myHero):normalized() * self.E.range
+                local p3 = myHero + (Vector(mousePos) - myHero):normalized() * myHero.boundingRadius
+                if IsWall(D3DXVECTOR3(p1.x, p1.y, p1.z)) then
+                        if not IsWall(D3DXVECTOR3(p2.x, p2.y, p2.z)) and mousePos.y-myHero.y < 225 then
+                                CastSpell(_E, p2.x, p2.z)
+                                myHero:MoveTo(p2.x, p2.z)
+                        else
+                                myHero:MoveTo(p3.x, p3.z)
+                        end
+                else
+                        myHero:MoveTo(p1.x, p1.z)
+                end
 	end
 end
 
