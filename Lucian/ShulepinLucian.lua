@@ -387,9 +387,9 @@ end
 
 function Lucian:Walljumper()
 	if self.Config.Wall.Key then
-		local p1 = myHero + (Vector(mousePos) - myHero):normalized() * 200
-                local p2 = myHero + (Vector(mousePos) - myHero):normalized() * self.E.range
-                local p3 = myHero + (Vector(mousePos) - myHero):normalized() * myHero.boundingRadius
+		local p1 = self:VectorExtend(Vector(myHero), Vector(mousePos), 200)
+                local p2 = self:VectorExtend(Vector(myHero), Vector(mousePos), self.E.range)
+                local p3 = self:VectorExtend(Vector(myHero), Vector(mousePos), myHero.boundingRadius)
                 if IsWall(D3DXVECTOR3(p1.x, p1.y, p1.z)) then
                         if not IsWall(D3DXVECTOR3(p2.x, p2.y, p2.z)) and mousePos.y-myHero.y < 225 then
                                 CastSpell(_E, p2.x, p2.z)
