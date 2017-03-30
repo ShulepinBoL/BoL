@@ -5,7 +5,7 @@ local function Alert(text, name)
     print("<b><font color=\"#ffb10a\">"..name.."- <font color=\"#ffffff\"><b>"..text) 
 end
 
-local ScriptVersion = "0.2"
+local ScriptVersion = "0.3"
 local LeagueVersion = "7.6"
 local ScriptAuthor = "Shulepin"
 
@@ -84,7 +84,8 @@ function Lucian:Vars()
         self.R.IsReady = function() return myHero:CanUseSpell(_R) == READY end
 
         self.Q.GetDamage = function(unit) return myHero:CalcDamage(unit, (45 + 35 * myHero:GetSpellData(_Q).level + myHero.addDamage * ((50 + 10 * myHero:GetSpellData(_Q).level)/100))) end
-        self.W.GetDamage = function(unit) return myHero:CalcDamage(unit, (20 + 40 * myHero:GetSpellData(_W).level + myHero.ap * 0.9)) end
+        self.W.GetDamage = function(unit) return myHero:CalcMagicDamage(unit, (20 + 40 * myHero:GetSpellData(_W).level + myHero.ap * 0.9)) end
+        self.R.GetDamage = function(unit) return myHero:CalcDamage(unit, (5 + 15 * myHero:GetSpellData(_R).level + myHero.totalDamage * 0.2 + myHero.ap * 0.1) * (15 + 5 * myHero:GetSpellData(_Q).level)) end
 
         self.HavePassive = false
 	self.LastCastTime = 0
@@ -188,6 +189,9 @@ function Lucian:Menu()
 	self.Config.Draw:addSubMenu("[R] The Culling", "R")
 	self.Config.Draw.R:addParam("Range", "Draw R Range", SCRIPT_PARAM_ONOFF, true)
 	self.Config.Draw.R:addParam("Color", "R Color", SCRIPT_PARAM_COLOR, {100, 255, 255, 255})
+	self.Config.Draw:addSubMenu("[X] Damage Indicator", "Dmg")
+	self.Config.Draw.Dmg:addParam("Use", "Draw Damage Indicator", SCRIPT_PARAM_ONOFF, true)
+	self.Config.Draw.Dmg:addParam("Color", "Damage Indicator Color", SCRIPT_PARAM_COLOR, {255, 255, 184, 64})
 	self.Config.Draw:addParam("Disable", "Disable All Drawings", SCRIPT_PARAM_ONOFF, false)
 	--
 	self.Config:addSubMenu("[Lucian] Skin Changer", "Skin")
@@ -275,6 +279,13 @@ function Lucian:Draw()
 	        else
 		        DrawCircle3D(pos1.x, pos1.y, pos1.z, 150, 2, ARGB(255, 255, 255, 255), 75)
 		        DrawText("E Pos", 25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).x-25, WorldToScreen(D3DXVECTOR3(pos1.x, pos1.y, pos1.z)).y, ARGB(255, 255, 255, 255))
+	        end
+        end
+
+        if self.Config.Draw.Dmg.Use then
+        	for _, enemy in pairs(GetEnemyHeroes()) do
+        		local dmg = self:ComboDamage(enemy)
+		        self:DrawDamage(enemy, dmg, ARGB(self.Config.Draw.Dmg.Color[1], self.Config.Draw.Dmg.Color[2], self.Config.Draw.Dmg.Color[3], self.Config.Draw.Dmg.Color[4]))
 	        end
         end
 
@@ -496,4 +507,46 @@ end
 
 function Lucian:SkinChanger()
 	SetSkin(myHero, self.Config.Skin.List - 1)
+end
+
+function Lucian:CalcDamage(unit)
+	local AA = myHero:CalcDamage(unit, myHero.totalDamage)
+	local passive = myHero:CalcDamage(unit, (AA + AA * (myHero.level > 0 and myHero.level < 7 and 0.4 or myHero.level > 6 and myHero.level < 13 and 0.5 or myHero.level > 12 and 0.6)))
+	local Q = self.Q.GetDamage(unit)
+	local W = self.W.GetDamage(unit)
+	local E = passive
+	local R = self.R.GetDamage(unit)
+	return AA, passive, Q, W, E, R
+end
+
+function Lucian:ComboDamage(unit)
+	local AA, passive, Q, W, E, R = self:CalcDamage(unit)
+	local dmg = AA
+	if self.Q.IsReady() then
+		dmg = dmg + Q + passive
+	end
+	if self.W.IsReady() then
+		dmg = dmg + W + passive
+	end
+	if self.E.IsReady() then
+		dmg = dmg + E
+	end
+	if self.R.IsReady() and myHero:GetSpellData(_R).toggleState == 1 then
+		dmg = dmg + R
+	end
+	return dmg
+end
+
+function Lucian:DrawDamage(unit, dmg, color)
+	if unit == nil or not unit.visible or unit.dead then return end
+	local barPos = GetUnitHPBarPos(unit)
+	local offset = GetUnitHPBarOffset(unit)
+	local damage = unit.health - dmg
+	local xPos = barPos.x - 66
+	local yPos = barPos.y + (offset.y * 53) + 2
+	local x1 = xPos + ((unit.health /unit.maxHealth) * 104)
+	local y1 = yPos
+	local x2 = xPos + (((damage > 0 and damage or 0) / unit.maxHealth) * 104)
+	local y2 = yPos
+        DrawLine(x1, y1, x2, y2, 9, color)
 end
